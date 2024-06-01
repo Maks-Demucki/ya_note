@@ -19,3 +19,12 @@ def test_pages_availability_for_anonymous_user(client, name):
     responce = client.get(url)
     assert responce.status_code == HTTPStatus.OK
 
+
+@pytest.mark.parametrize(
+    'name',
+    ('notes:list', 'notes:add', 'notes:success')
+)
+def test_pages_availability_for_auth_user(not_author_client, name):
+    url = reverse(name)
+    responce = not_author_client.get(url)
+    assert responce.status_code == HTTPStatus.OK
