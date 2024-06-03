@@ -6,6 +6,8 @@ from pytils.translit import slugify
 
 from django.urls import reverse
 
+from http import HTTPStatus
+
 from notes.forms import WARNING
 from notes.models import Note
 
@@ -59,3 +61,13 @@ def test_author_can_edit_note(author_client, form_data, note):
     assert note.title == form_data['title']
     assert note.text == form_data['text']
     assert note.slug == form_data['slug']
+
+
+def test_other_user_cant_edit_note(not_author_client, form_data, note):
+    url = reverse('notes:edit', args=(note.slug,))
+    responce = not_author_client.post(url, form_data)
+    assert responce.status_code == HTTPStatus.NOT_FOUND
+    note_from_db = Note.objects.get(id=note.id)
+    assert note.title == note_from_db.title
+    assert note.text == note_from_db.text
+    assert note.slug == note_from_db.slug 
