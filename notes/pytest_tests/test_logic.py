@@ -1,9 +1,10 @@
 import pytest
 
-from pytest_django.asserts import assertRedirects
+from pytest_django.asserts import assertRedirects, assertFormError
 
 from django.urls import reverse
 
+from notes.forms import WARNING
 from notes.models import Note
 
 
@@ -27,3 +28,11 @@ def test_anonymous_user_cant_create_note(client, form_data):
     expected_url = f'{login_url}?next={url}'
     assertRedirects(responce, expected_url)
     assert Note.objects.count() == 0
+
+
+def test_not_unique_slug(author_client, note, form_data):
+    url = reverse('notes:add')
+    form_data['slug'] = note.slug
+    responce = author_client.post(url, data=form_data)
+    assertFormError(responce, 'form', 'slug', errors=(note.slug + WARNING))
+    assert Note.objects.count() == 1
