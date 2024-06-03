@@ -2,6 +2,8 @@ import pytest
 
 from pytest_django.asserts import assertRedirects, assertFormError
 
+from pytils.translit import slugify
+
 from django.urls import reverse
 
 from notes.forms import WARNING
@@ -36,3 +38,14 @@ def test_not_unique_slug(author_client, note, form_data):
     responce = author_client.post(url, data=form_data)
     assertFormError(responce, 'form', 'slug', errors=(note.slug + WARNING))
     assert Note.objects.count() == 1
+
+
+def test_empty_slug(author_client, form_data):
+    url = reverse('notes:add')
+    form_data.pop('slug')
+    responce = author_client.post(url, data=form_data)
+    assertRedirects(responce, reverse('notes:success'))
+    assert Note.objects.count() == 1
+    new_note = Note.objects.get()
+    expected_slug = slugify(form_data['title'])
+    assert new_note.slug == expected_slug
